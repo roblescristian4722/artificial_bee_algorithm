@@ -2,6 +2,7 @@
 # ALGORITMO ABC (ARTIFICIAL BEE COLONY) PARA OPTIMIZACIÓN
 import numpy as np
 from random import random
+from matplotlib import pyplot as plt
 
 def fitness(x):
     """Función benchmark (absolute)"""
@@ -20,7 +21,7 @@ def generate_matrix(min: float, max: float, sol: int, dim: int):
 min = -10
 max = 10
 pop_size = 50
-gen = 1000
+gen = 100
 dim = 2
 # Límite de estancamiento generacional
 L = 5
@@ -32,7 +33,22 @@ ops = pop_size - fps
 # col2: estancamiento de la abeja)
 fp = generate_matrix(min, max, pop_size, dim)
 
+# Mejor abeja obrera de cada generación
 best_fp = 0
+# Array en el que se almacena el promedio de soluciones de cada generación con
+# la intención de graficarlas al final de la ejecución
+gen_mean = []
+best_mean = max
+best_gen = 0
+
+# Impresión de datos iniciales en la terminal
+print("Datos iniciales:")
+print(f"Espacio de búsqueda: [{min}, {max}]")
+print(f"Tamaño de la población: {pop_size}")
+print(f"Cantidad de generaciones: {gen}")
+print(f"Cantidad de dimensiones (características x): {dim - 1}")
+print(f"Tamaño de la población de abejas obreras (forager bees): {fps}")
+print(f"Tamaño de la población de abejas espectadoras (onlooker bees): {ops}")
 
 for g in range(gen):
     # Abejas obreras
@@ -72,4 +88,25 @@ for g in range(gen):
         if fp[i, 1] > L:
             offset = abs(min) + abs(max)
             fp[i] = np.array([ ((random() * 100) % offset) + min, 0 ])
-    print(np.mean(fp[:, 0]))
+    gen_mean.append(np.mean(fp[:, 0]))
+    if fitness(best_mean) > fitness(np.mean(fp[:, 0])):
+        best_mean = np.mean(fp[:, 0])
+        best_gen = g
+
+# Impresión de resultados en pantalla
+print(f"\nMejor resultado encontrado (media): {best_mean}")
+print(f"Encontrado en la generación: {best_gen}")
+print(f"Último resultado encontrado (media): {gen_mean[len(gen_mean) - 1]}")
+
+# Graficación
+fig = plt.figure()
+ax = fig.add_subplot()
+fig.suptitle("Optimización por colonia de abejas (Artificial Bee Colony)")
+ax.set_xlabel("Generaciones")
+ax.set_ylabel("Costo")
+plt.plot(gen_mean, 'b-', label='Promedio de las soluciones')
+plt.plot(best_gen, best_mean, 'r+', label='Mejor promedio de soluciones obtenido')
+plt.plot(gen - 1, gen_mean[gen - 1], 'r*', label='Último promedio de soluciones obtenido')
+plt.plot([ 0 for _ in range(gen) ], 'g--', label='Solución óptima (mínimo global)')
+ax.legend()
+plt.show()
